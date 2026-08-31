@@ -120,6 +120,8 @@ cuando en realidad es 44, y no hay forma de darse cuenta mirando la pantalla: el
 número se ve perfectamente normal.</p>
 <p>Ya nos pasó una vez que la documentación de EA estuviera mal (ver
 <code>decisions/011-soporte-f1-26.md</code>), así que no alcanza con confiar.</p>
+<p>A eso se suma un cuarto punto: del <strong>formato UDP 2026</strong> —el que vamos a usar—
+queda sin confirmar cómo se leen el piloto y el equipo. Eso es la validación 6.</p>
 <p><strong>Las validaciones 1, 2, 3, 5 y 6 se pueden hacer en una sola sesión de juego.</strong>
 La 4 (sesión larga) es la única que va aparte, porque necesita una carrera
 completa.</p>
@@ -183,7 +185,7 @@ pantalla con un cartel rojo: <em>"No se está guardando nada"</em>.</p>
 </tr>
 <tr>
 <td>UDP Format</td>
-<td><strong>2025</strong></td>
+<td><strong>2026</strong></td>
 <td>Ver la nota de abajo</td>
 </tr>
 <tr>
@@ -197,10 +199,18 @@ pantalla con un cartel rojo: <em>"No se está guardando nada"</em>.</p>
 <p><strong>La IP hay que leerla en la app</strong>, en la pantalla de conexión, y escribirla a
 mano en el juego. Cambia si te reconectás al Wi-Fi, así que conviene mirarla
 cada vez.</p>
-<p><strong>Sobre el UDP Format:</strong> la app acepta <strong>2024, 2025 y 2026</strong>. Dejá el que uses
-normalmente — no hace falta cambiarlo para estas pruebas.</p>
-<p>Lo único importante es <strong>no cambiarlo a mitad de camino</strong>: si arrancás en uno
-y terminás en otro, un resultado raro no se sabría a cuál atribuirlo.</p>
+<p><strong>Sobre el UDP Format:</strong> la app acepta 2024, 2025 y 2026, pero para estas
+pruebas usá <strong>2026</strong>.</p>
+<p>El motivo es simple: es el formato con el que se va a jugar. Validar contra
+2025 sería dar por buena una versión que ya quedó atrás — no tiene sentido
+salir el día cero con una app comprobada contra el año anterior.</p>
+<p>El formato 2026 ya se probó contra tráfico real y funciona; de hecho así se
+encontró un error nuestro (un campo de temperatura del motor que cambió de
+tamaño en 2026 y hacía que no se viera nada de telemetría). Lo que <strong>falta</strong>
+confirmar de 2026 es justamente el piloto y el equipo, que es la
+<strong>validación 6</strong>.</p>
+<p>Lo único importante es <strong>no cambiarlo a mitad de camino</strong>: si arrancás en un
+formato y terminás en otro, un resultado raro no se sabría a cuál atribuirlo.</p>
 </blockquote>
 <h3>4. Confirmar que está capturando</h3>
 <p>Antes de empezar a manejar, la app tiene que mostrar:</p>
@@ -373,16 +383,52 @@ el gráfico de velocidad.</p>
   un número negativo.</li>
 </ul>
 <hr />
-<h2>Validación 6 — Piloto, equipo y condiciones</h2>
-<p>Rápida, y sale gratis con cualquier sesión.</p>
+<h2>Validación 6 — Piloto, equipo y condiciones ⭐ importa más de lo que parece</h2>
+<p>Es rápida —sale gratis con cualquier sesión— pero <strong>no es menor</strong>: es lo último
+que queda sin confirmar del formato 2026.</p>
+<p>En 2026 los identificadores de piloto y de equipo pasaron de ocupar 1 byte a
+ocupar 2. El código ya lo contempla, pero <strong>eso se programó leyendo
+documentación, no viendo tráfico real</strong> — y en este mismo formato la
+documentación ya nos falló una vez. Si ese cambio está mal interpretado, se ve
+acá antes que en ningún otro lado.</p>
+<h3>Pasos</h3>
 <p>En el dashboard, en la <strong>cabecera de la sesión</strong> tiene que aparecer tu nombre de
 piloto y el equipo (por ejemplo «Felipe · Ferrari»), y al expandirla, el panel
 <strong>«CONDICIONES»</strong> con clima, temperatura del aire y de la pista, y dificultad de
 la IA.</p>
+<h3>Qué anotar</h3>
 <p><strong>Comparar contra lo que decía el juego en esa sesión.</strong> La dificultad de la IA
 es la más fácil: vos la elegiste, tiene que decir ese número.</p>
-<p>Si dice <strong>«Equipo #47»</strong> en vez del nombre del equipo, no es un error: es que ese
-id no está en nuestra tabla. <strong>Avisá qué equipo era en realidad</strong> y lo agregamos.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Si…</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre y equipo <strong>correctos</strong></td>
+<td>Los identificadores de 2026 se leen bien. Es lo que faltaba confirmar.</td>
+</tr>
+<tr>
+<td><strong>Equipo equivocado</strong> (dice Ferrari y corriste con Alpine)</td>
+<td>El identificador está mal leído. Es el error que estamos buscando. <strong>Anotá qué equipo era en realidad.</strong></td>
+</tr>
+<tr>
+<td>Dice <strong>«Equipo #»</strong> con un número grande (47, 300, 1200)</td>
+<td>Mismo problema, y el número es la pista para arreglarlo. Anotalo tal cual.</td>
+</tr>
+<tr>
+<td><strong>No aparece nada</strong> de piloto ni equipo</td>
+<td>El paquete no llegó o se descartó. Avisá igual.</td>
+</tr>
+<tr>
+<td>Nombre de piloto <strong>con caracteres raros o cortado</strong></td>
+<td>El texto se está leyendo desde el byte equivocado.</td>
+</tr>
+</tbody>
+</table></div>
 <hr />
 <h2>Cómo reportar</h2>
 <p>No hace falta nada formal. Con esto alcanza:</p>
@@ -413,7 +459,9 @@ VALIDACIÓN 5 — Primera vuelta
 ¿El gráfico arranca en 0 m y a velocidad alta?  sí / no
 
 VALIDACIÓN 6 — Piloto y condiciones
-Nombre y equipo que muestra:
+Equipo con el que corrí:
+Equipo que muestra el dashboard:
+Nombre de piloto que muestra:      ¿bien escrito? sí / no
 Dificultad IA: juego ___ / dashboard ___
 Clima y temperaturas: ¿coinciden?
 
