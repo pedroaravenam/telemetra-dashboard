@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Compartible por link, pero fuera de los buscadores: es documentación
+     interna de pruebas, no una página de producto. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Validaciones pendientes · Telemetra Racing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --asphalt:#0B0E13; --carbon:#131820; --carbon-hi:#171D27; --kerb:#212934;
+    --chalk:#E6EBF2; --smoke:#7D8899; --purple:#B24BF3; --green:#00D46A;
+    --red:#FF4D4D; --amber:#FF9F1C;
+    --sans:"Saira Semi Condensed","Roboto Condensed",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--asphalt); color: var(--chalk); font-family: var(--sans);
+    font-size: 17px; line-height: 1.65; margin: 0; padding: 0 18px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+
+  .stripe {
+    height: 8px; margin: 0 -18px 36px;
+    background: repeating-linear-gradient(90deg, var(--kerb) 0 16px, var(--asphalt) 16px 32px);
+    background-size: 32px 4px;
+  }
+  .stripe::after {
+    content:""; display:block; height:4px; margin-top:4px;
+    background: repeating-linear-gradient(90deg, var(--asphalt) 0 16px, var(--kerb) 16px 32px);
+  }
+
+  .brand {
+    font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--smoke); margin: 0 0 26px;
+  }
+
+  h1 {
+    font-size: clamp(30px, 7vw, 44px); font-weight: 700; line-height: 1.05;
+    letter-spacing: -0.5px; margin: 0 0 20px; text-wrap: balance;
+  }
+  h2 {
+    font-size: 25px; font-weight: 600; margin: 52px 0 12px;
+    padding-top: 22px; border-top: 1px solid var(--kerb); text-wrap: balance;
+  }
+  h3 { font-size: 19px; font-weight: 600; margin: 30px 0 10px; }
+  h4 { font-size: 16px; font-weight: 600; margin: 22px 0 8px; color: var(--smoke); }
+
+  p, li { max-width: 66ch; }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 7px; }
+
+  a { color: var(--purple); text-underline-offset: 3px; word-break: break-word; }
+  a:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; border-radius: 2px; }
+
+  strong { color: #F4F7FB; font-weight: 600; }
+  code {
+    font-family: var(--mono); font-size: 0.86em; background: var(--carbon);
+    border: 1px solid var(--kerb); border-radius: 2px; padding: 1px 5px;
+  }
+  pre {
+    background: var(--carbon); border: 1px solid var(--kerb); border-radius: 2px;
+    padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.55;
+  }
+  pre code { background: none; border: 0; padding: 0; }
+
+  blockquote {
+    margin: 22px 0; padding: 16px 20px; background: var(--carbon);
+    border-left: 3px solid var(--purple); border-radius: 2px;
+  }
+  blockquote p:last-child { margin-bottom: 0; }
+
+  /* Las tablas se desbordan en un teléfono: cada una scrollea sola, la página
+     nunca de costado. */
+  table {
+    border-collapse: collapse; width: 100%; min-width: 460px;
+    font-size: 15px; margin: 4px 0;
+  }
+  .table-scroll {
+    overflow-x: auto; border: 1px solid var(--kerb); border-radius: 2px; margin: 18px 0;
+  }
+  th {
+    text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--smoke); background: var(--carbon-hi);
+    padding: 11px 14px; border-bottom: 1px solid var(--kerb); white-space: nowrap;
+  }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--kerb); background: var(--carbon); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  hr { border: 0; border-top: 1px solid var(--kerb); margin: 44px 0; }
+
+  footer {
+    margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--kerb);
+    font-size: 13px; color: var(--smoke);
+  }
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+<p class="brand">Telemetra Racing</p>
+<h1>Validaciones pendientes contra el juego</h1>
+<p>Última revisión: 2026-08-30
+Para: <strong>Felipe</strong> (PS5) — o quien tenga el juego a mano</p>
+<p>Hay partes de Telemetra Racing que funcionan "en teoría": el código las lee, la
+app las muestra y los tests pasan, pero <strong>nadie comparó nunca esos números
+contra lo que dice el juego</strong>. Este documento lista todas, con los pasos para
+comprobarlas.</p>
+<h2>Por qué esto importa más de lo que parece</h2>
+<p>Tres bloques de datos —el setup del auto, el combustible/ERS y el desgaste de
+neumáticos— se programaron leyendo la <strong>documentación</strong> de EA, no tráfico real.</p>
+<p>El riesgo no es que la app falle. Es que <strong>muestre números creíbles y
+equivocados</strong>. Si un byte está corrido, el alerón delantero puede aparecer en 38
+cuando en realidad es 44, y no hay forma de darse cuenta mirando la pantalla: el
+número se ve perfectamente normal.</p>
+<p>Ya nos pasó una vez que la documentación de EA estuviera mal (ver
+<code>decisions/011-soporte-f1-26.md</code>), así que no alcanza con confiar.</p>
+<p><strong>Las cinco validaciones se pueden hacer en una sola sesión de juego</strong>, salvo la
+de sesión larga, que necesita una carrera completa.</p>
+<hr />
+<h2>Antes de empezar</h2>
+<h3>1. La APK correcta</h3>
+<p>Descargar <strong><code>telemetra-latest.apk</code></strong> desde:</p>
+<p><strong>https://github.com/pedroaravenam/f1app/releases/download/apk-latest/telemetra-latest.apk</strong></p>
+<p>Ese link <strong>no cambia nunca</strong> y siempre trae la última versión compilada.</p>
+<blockquote>
+<p><strong>Cómo saber que tenés la nueva sin mirar números de versión:</strong> todas las
+compilaciones dicen <code>1.0.0+1</code>, así que la versión no sirve para distinguir.
+Mirá estas dos cosas en su lugar:</p>
+<ul>
+<li>En la pantalla de inicio del celular la app se llama <strong>«Telemetra Racing»</strong>,
+  no «Telemetra» a secas.</li>
+<li>Al conectarse, debajo de la IP aparece una línea del tipo
+  <strong><code>12.480 paquetes · escuchando hace 3:45</code></strong>. Si esa línea no está, la APK
+  es vieja.</li>
+</ul>
+</blockquote>
+<p><strong>Si la instalación falla con un error de firma</strong>, es porque la que tenés
+instalada es anterior a fines de agosto y está firmada con otra llave.
+Desinstalá la vieja e instalá de nuevo. Es por única vez: de ahí en adelante las
+actualizaciones se instalan encima sin desinstalar nada.</p>
+<h3>2. Cuenta iniciada</h3>
+<p>Abrir la app e <strong>iniciar sesión</strong>. Si la app no tiene sesión iniciada, captura y
+muestra todo en vivo pero <strong>no guarda nada</strong>, y desde la versión nueva avisa en
+pantalla con un cartel rojo: <em>"No se está guardando nada"</em>.</p>
+<p>Si ves ese cartel, volvé a iniciar sesión antes de seguir.</p>
+<h3>3. Configuración del juego (PS5)</h3>
+<p><code>Ajustes</code> → <code>Telemetría</code> (<em>Settings</em> → <em>Telemetry Settings</em>):</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Ajuste</th>
+<th>Valor</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UDP Telemetry</td>
+<td><strong>On</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>UDP Broadcast Mode</td>
+<td><strong>Off</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>UDP IP Address</td>
+<td><strong>la IP que muestra la app</strong></td>
+<td>No la del router, no <code>127.0.0.1</code></td>
+</tr>
+<tr>
+<td>UDP Port</td>
+<td><strong>20777</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>UDP Format</td>
+<td><strong>2025</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>UDP Send Rate</td>
+<td>60 Hz</td>
+<td>Cualquiera sirve, 60 es lo que ya usás</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>La IP hay que leerla en la app</strong>, en la pantalla de conexión, y escribirla a
+mano en el juego. Cambia si te reconectás al Wi-Fi, así que conviene mirarla
+cada vez.</p>
+</blockquote>
+<h3>4. Confirmar que está capturando</h3>
+<p>Antes de empezar a manejar, la app tiene que mostrar:</p>
+<ul>
+<li>El monito de antena en <strong>verde</strong> y "Conectado"</li>
+<li><strong>El contador de paquetes subiendo</strong> (sube rápido, ~60 por segundo)</li>
+<li>Velocidad, acelerador y freno moviéndose cuando movés el auto</li>
+</ul>
+<p>Si el contador sube pero no aparece velocidad, no es problema de red: es de
+formato, y la app te dice cuál llegó.</p>
+<hr />
+<h2>Validación 1 — Setup del auto ⭐ la más importante</h2>
+<p><strong>Qué comprueba:</strong> que los 23 valores del setup se estén leyendo de los bytes
+correctos.</p>
+<p><strong>Por qué es la primera:</strong> es la que bloquea todo lo demás. Los otros dos
+bloques (combustible/ERS y desgaste) se transcribieron de la misma fuente. Si
+este está bien, es buena señal para los otros; si está mal, hay que revisar los
+tres.</p>
+<h3>Pasos</h3>
+<ol>
+<li>Entrar a una sesión de <strong>Práctica</strong> en cualquier circuito.</li>
+<li>Ir al <strong>garage</strong> y abrir el menú de <strong>Setup del coche</strong>.</li>
+<li><strong>Sacarle foto a las pantallas del setup del juego</strong> — todas las pestañas:
+   aerodinámica, transmisión, suspensión, frenos, neumáticos, lastre y
+   combustible.</li>
+<li>Salir a pista y <strong>completar al menos una vuelta</strong> (para que se guarde la
+   sesión).</li>
+<li>Abrir el dashboard en <strong>https://pedroaravenam.github.io/telemetra-dashboard/</strong>
+   e iniciar sesión con la misma cuenta.</li>
+<li>Buscar esa sesión en el historial, <strong>tocar la fila para expandirla</strong> y mirar
+   el panel <strong>«SETUP DEL AUTO»</strong>.</li>
+<li><strong>Sacarle foto a ese panel.</strong></li>
+</ol>
+<h3>Qué anotar</h3>
+<p>Comparar valor por valor. El panel del dashboard está agrupado <strong>igual que el
+menú del juego</strong> justamente para que se puedan poner lado a lado.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Si…</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Todos coinciden</strong></td>
+<td>El layout está bien. Se marca validado y se puede confiar.</td>
+</tr>
+<tr>
+<td><strong>Algunos coinciden y otros no</strong></td>
+<td>Hay un byte corrido. <strong>Anotá cuáles fallan y en qué orden aparecen</strong> — eso dice dónde empieza el problema.</td>
+</tr>
+<tr>
+<td><strong>Ninguno coincide</strong></td>
+<td>El layout está mal desde el principio.</td>
+</tr>
+<tr>
+<td><strong>El panel no aparece</strong></td>
+<td>El paquete Car Setups no llegó, o llegó con un tamaño distinto al esperado. Avisá igual: es información.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Los valores más fáciles de comparar, si querés hacer una revisión rápida antes
+de la completa: <strong>alerón delantero</strong>, <strong>alerón trasero</strong>, <strong>reparto de frenada</strong>
+y <strong>combustible</strong>.</p>
+<hr />
+<h2>Validación 2 — Combustible y ERS</h2>
+<p><strong>Qué comprueba:</strong> el paquete Car Status (combustible, batería, compuesto de
+neumático).</p>
+<h3>Pasos</h3>
+<ol>
+<li>En la <strong>misma sesión</strong> de la validación 1, mientras manejás, <strong>abrir el MFD</strong>
+   del juego en la página de combustible/ERS.</li>
+<li>Anotar o fotografiar: <strong>combustible restante (kg)</strong>, <strong>vueltas que alcanzan</strong>
+   y <strong>carga de la batería (%)</strong>.</li>
+<li>Terminar esa vuelta (hay que cruzar la meta para que se guarde).</li>
+<li>En el dashboard, abrir esa vuelta y mirar el panel <strong>«ESTADO DEL AUTO AL
+   CERRAR LA VUELTA»</strong>.</li>
+</ol>
+<h3>Qué anotar</h3>
+<p>Los valores no van a ser idénticos —el del juego lo miraste a mitad de vuelta y
+el guardado es del final— pero tienen que ser <strong>del mismo orden</strong>:</p>
+<ul>
+<li>Combustible: si el MFD decía ~8 kg, el panel tiene que decir algo entre 6 y 8,
+  <strong>no 40 ni 0,3</strong>.</li>
+<li>Batería: si el MFD decía ~50%, el panel tiene que decir algo cercano.</li>
+<li><strong>Compuesto</strong>: este sí tiene que coincidir exacto. Si estás con medios, tiene
+  que decir «Medio».</li>
+</ul>
+<p><strong>Un valor absurdo (combustible de 3.000 kg, batería de 400%) es la señal más
+clara de un layout corrido.</strong> Si ves algo así, avisá enseguida y no sigas con la
+validación 3: ya sabemos que hay que revisar.</p>
+<hr />
+<h2>Validación 3 — Desgaste de neumáticos</h2>
+<p><strong>Qué comprueba:</strong> el paquete Car Damage.</p>
+<h3>Pasos</h3>
+<ol>
+<li>Manejar <strong>varias vueltas seguidas</strong> (5 o más), forzando un poco el neumático.</li>
+<li>Antes de entrar a boxes, <strong>abrir el MFD en la página de desgaste</strong> y
+   fotografiar los cuatro porcentajes.</li>
+<li>En el dashboard, abrir la última vuelta y mirar <strong>«DESGASTE MÁXIMO»</strong> en el
+   panel de estado del auto.</li>
+</ol>
+<h3>Qué anotar</h3>
+<p>El dashboard muestra <strong>el peor de las cuatro ruedas</strong>, no las cuatro. Si el MFD
+decía 11/8/11/10, el panel tiene que decir <strong>11%</strong>.</p>
+<p>También aparece <strong>«VUELTAS DEL NEUMÁTICO»</strong>: tiene que coincidir con cuántas
+vueltas llevabas con ese juego puesto.</p>
+<hr />
+<h2>Validación 4 — Sesión larga 🕐</h2>
+<p><strong>Qué comprueba:</strong> que la captura aguante una carrera completa sin cortarse, y
+cuánta batería se come.</p>
+<p><strong>Esta es la única que no se puede hacer junto con las demás</strong>, porque necesita
+tiempo real de manejo.</p>
+<h3>Pasos</h3>
+<ol>
+<li>Poner el celular a cargar, o al menos con batería alta. <strong>Anotar el
+   porcentaje de batería antes de empezar.</strong></li>
+<li>Abrir la app en la pantalla de conexión. <strong>La pantalla se queda prendida
+   sola</strong> — es a propósito, no hace falta tocar nada.</li>
+<li>Correr una <strong>carrera larga</strong>: 25% de distancia o más. Cuanto más larga,
+   mejor.</li>
+<li><strong>Al terminar, antes de tocar nada, sacarle foto a la pantalla de la app.</strong></li>
+</ol>
+<h3>Qué anotar</h3>
+<p>La foto tiene que mostrar la línea del contador, por ejemplo:</p>
+<pre><code>180.000 paquetes · escuchando hace 2:30:00
+</code></pre>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Si…</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>El contador <strong>siguió subiendo</strong> hasta el final</td>
+<td>La captura aguantó. Prueba pasada.</td>
+</tr>
+<tr>
+<td>El contador <strong>quedó congelado</strong></td>
+<td>Se cortó, y el tiempo dice más o menos cuándo. <strong>Eso ya es un dato útil</strong>: saber que aguantó 40 minutos vale más que no saber nada.</td>
+</tr>
+<tr>
+<td>La app <strong>se cerró sola</strong></td>
+<td>Anotar a qué altura de la carrera.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Anotar también el <strong>porcentaje de batería al final</strong> y si el celular se calentó.</p>
+<p>Después, en el dashboard: <strong>¿están todas las vueltas de la carrera?</strong> Si corriste
+20 vueltas tienen que aparecer 20 (menos las inválidas, que igual aparecen pero
+marcadas).</p>
+<hr />
+<h2>Validación 5 — Que la primera vuelta salga limpia</h2>
+<p><strong>Qué comprueba:</strong> un arreglo reciente. Antes, la primera vuelta de cada sesión
+guardaba también el tiempo en el garage y la vuelta de salida —en una sesión
+real llegó a tener <strong>el triple de datos de los que le correspondían</strong>, con el
+auto parado en boxes.</p>
+<p>Es rápido y sale gratis con cualquiera de las validaciones anteriores.</p>
+<h3>Pasos</h3>
+<p>En el dashboard, abrir la <strong>vuelta 1</strong> de la sesión que acabás de correr y mirar
+el gráfico de velocidad.</p>
+<h3>Qué anotar</h3>
+<ul>
+<li><strong>Bien</strong>: el gráfico arranca a velocidad alta (venís lanzado cruzando la meta)
+  y el eje de abajo empieza en 0 m.</li>
+<li><strong>Mal</strong>: el gráfico arranca con un tramo largo en 0 km/h, o el eje empieza en
+  un número negativo.</li>
+</ul>
+<hr />
+<h2>Validación 6 — Piloto, equipo y condiciones</h2>
+<p>Rápida, y sale gratis con cualquier sesión.</p>
+<p>En el dashboard, en la <strong>cabecera de la sesión</strong> tiene que aparecer tu nombre de
+piloto y el equipo (por ejemplo «Felipe · Ferrari»), y al expandirla, el panel
+<strong>«CONDICIONES»</strong> con clima, temperatura del aire y de la pista, y dificultad de
+la IA.</p>
+<p><strong>Comparar contra lo que decía el juego en esa sesión.</strong> La dificultad de la IA
+es la más fácil: vos la elegiste, tiene que decir ese número.</p>
+<p>Si dice <strong>«Equipo #47»</strong> en vez del nombre del equipo, no es un error: es que ese
+id no está en nuestra tabla. <strong>Avisá qué equipo era en realidad</strong> y lo agregamos.</p>
+<hr />
+<h2>Cómo reportar</h2>
+<p>No hace falta nada formal. Con esto alcanza:</p>
+<pre><code>VALIDACIÓN 1 — Setup
+Circuito:
+¿Coinciden todos?  sí / no
+Si no, cuáles fallaron:
+Fotos: (las del juego y la del dashboard)
+
+VALIDACIÓN 2 — Combustible y ERS
+MFD decía:  ___ kg,  ___ vueltas,  ___ % batería
+Dashboard dice: ___ kg, ___ vueltas, ___ % batería
+Compuesto: juego ___ / dashboard ___
+
+VALIDACIÓN 3 — Desgaste
+MFD (FL/FR/RL/RR): ___/___/___/___
+Dashboard &quot;desgaste máximo&quot;: ___
+Vueltas del neumático: juego ___ / dashboard ___
+
+VALIDACIÓN 4 — Sesión larga
+Duración de la carrera:
+Foto del contador al final:
+Batería: ___ % al empezar → ___ % al terminar
+¿Se cortó? ¿A qué altura?
+¿Aparecen todas las vueltas en el dashboard?
+
+VALIDACIÓN 5 — Primera vuelta
+¿El gráfico arranca en 0 m y a velocidad alta?  sí / no
+
+VALIDACIÓN 6 — Piloto y condiciones
+Nombre y equipo que muestra:
+Dificultad IA: juego ___ / dashboard ___
+Clima y temperaturas: ¿coinciden?
+</code></pre>
+<p><strong>Las fotos valen más que la descripción.</strong> Una foto del menú del juego al lado
+de una del dashboard resuelve en dos segundos lo que por escrito lleva media
+hora de ida y vuelta.</p>
+<p>Y si algo no se entiende o la app hace algo raro que no está en esta lista,
+<strong>avisá igual</strong>. Un comportamiento inesperado que nadie anotó es exactamente
+como se pierden los bugs.</p>
+<hr />
+<h2>Referencias técnicas</h2>
+<p>Para quien vaya a arreglar lo que estas validaciones encuentren:</p>
+<ul>
+<li><code>decisions/016-car-setup.md</code> — layout de Car Setups</li>
+<li><code>decisions/021-car-status-y-damage.md</code> — layouts de Car Status y Car Damage</li>
+<li><code>decisions/020-comparacion-y-datos-de-sesion.md</code> — condiciones de sesión y el
+  arreglo de la primera vuelta</li>
+<li><code>decisions/001-captura-udp.md</code> — todo lo aprendido contra tráfico real,
+  incluidos los bugs ya encontrados y cómo se detectaron</li>
+</ul>
+<footer>
+  <p>Generado desde <code>docs/validaciones-pendientes.md</code> del repositorio. Si algo de acá quedó
+  viejo, la fuente es ese archivo — no esta página.</p>
+</footer>
+</div>
+</body>
+</html>
