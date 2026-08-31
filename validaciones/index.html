@@ -121,8 +121,8 @@ número se ve perfectamente normal.</p>
 <p>Ya nos pasó una vez que la documentación de EA estuviera mal (ver
 <code>decisions/011-soporte-f1-26.md</code>), así que no alcanza con confiar.</p>
 <p><strong>Las validaciones 1, 2, 3, 5 y 6 se pueden hacer en una sola sesión de juego.</strong>
-La 4 (sesión larga) necesita una carrera completa, y la 7 (formato 2026) va
-aparte y solo si tenés el pack de la temporada 2026.</p>
+La 4 (sesión larga) es la única que va aparte, porque necesita una carrera
+completa.</p>
 <hr />
 <h2>Antes de empezar</h2>
 <h3>1. La APK correcta</h3>
@@ -197,16 +197,10 @@ pantalla con un cartel rojo: <em>"No se está guardando nada"</em>.</p>
 <p><strong>La IP hay que leerla en la app</strong>, en la pantalla de conexión, y escribirla a
 mano en el juego. Cambia si te reconectás al Wi-Fi, así que conviene mirarla
 cada vez.</p>
-<p><strong>Sobre el UDP Format:</strong> la app acepta <strong>2024, 2025 y 2026</strong>, no hace falta
-ponerlo en 2025 para que funcione.</p>
-<p>Pero para <em>estas</em> validaciones sí conviene <strong>2025</strong>, por un motivo concreto:
-es el único formato que ya comprobamos contra tráfico real. El 2026 tiene
-diferencias de verdad —la grilla pasa a 24 autos, las fuerzas G y los ids de
-piloto cambian de tamaño— y <strong>eso todavía no se validó</strong>.</p>
-<p>Si corrés las validaciones en 2026 y algo sale mal, no vas a saber si el
-problema es el layout que estamos probando o el formato. Una incógnita por
-vez.</p>
-<p>El formato 2026 tiene su propia validación, la número 7, más abajo.</p>
+<p><strong>Sobre el UDP Format:</strong> la app acepta <strong>2024, 2025 y 2026</strong>. Dejá el que uses
+normalmente — no hace falta cambiarlo para estas pruebas.</p>
+<p>Lo único importante es <strong>no cambiarlo a mitad de camino</strong>: si arrancás en uno
+y terminás en otro, un resultado raro no se sabría a cuál atribuirlo.</p>
 </blockquote>
 <h3>4. Confirmar que está capturando</h3>
 <p>Antes de empezar a manejar, la app tiene que mostrar:</p>
@@ -390,59 +384,6 @@ es la más fácil: vos la elegiste, tiene que decir ese número.</p>
 <p>Si dice <strong>«Equipo #47»</strong> en vez del nombre del equipo, no es un error: es que ese
 id no está en nuestra tabla. <strong>Avisá qué equipo era en realidad</strong> y lo agregamos.</p>
 <hr />
-<h2>Validación 7 — Formato UDP 2026 (solo si tenés el 2026 Season Pack)</h2>
-<p><strong>Qué comprueba:</strong> que el juego con el pack de la temporada 2026 se lea bien.</p>
-<p><strong>Hacela aparte, después de las otras.</strong> El formato 2026 no es un ajuste
-cosmético: la grilla pasa de 22 a 24 autos, las fuerzas G cambian de tipo de
-dato y los identificadores de piloto y equipo se ensanchan. El código ya lo
-contempla, pero <strong>se programó leyendo documentación y comparando con librerías
-de la comunidad, sin tráfico real</strong>.</p>
-<p>Y ya sabemos que esa documentación se equivocó una vez: decía que la telemetría
-del auto no cambiaba en 2026 y era falso.</p>
-<h3>Pasos</h3>
-<ol>
-<li><strong>Primero terminá las validaciones 1 a 6 en formato 2025.</strong> Necesitamos saber
-   que los layouts están bien antes de cambiar el formato.</li>
-<li>En el juego, poner <code>UDP Format</code> en <strong>2026</strong>.</li>
-<li>Correr <strong>una vuelta</strong> en cualquier circuito.</li>
-<li>Mirar la app <strong>mientras manejás</strong> y después el dashboard.</li>
-</ol>
-<h3>Qué anotar</h3>
-<p>En la app, durante la sesión:</p>
-<div class="table-scroll"><table>
-<thead>
-<tr>
-<th>Si…</th>
-<th>Significa</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Velocidad, acelerador y freno se mueven normal</td>
-<td>La telemetría del auto se lee bien en 2026</td>
-</tr>
-<tr>
-<td>El contador de paquetes sube pero <strong>no hay velocidad</strong></td>
-<td>El tamaño del paquete no es el que esperamos. <strong>La app te muestra el número real recibido</strong> — anotá ese mensaje completo, es exactamente lo que necesitamos</td>
-</tr>
-<tr>
-<td>Sale un aviso de <strong>formato no compatible</strong></td>
-<td>Anotá qué número dice</td>
-</tr>
-</tbody>
-</table></div>
-<p>En el dashboard, después:</p>
-<ul>
-<li>¿Aparece la vuelta con su tiempo y sus tres sectores?</li>
-<li>¿Aparece tu <strong>nombre de piloto y el equipo</strong>? Este es el que más riesgo tiene:
-  los identificadores de equipo cambiaron de tamaño en 2026, así que si algo
-  está corrido acá es donde se va a ver primero — un equipo equivocado, o
-  «Equipo #» con un número enorme.</li>
-<li>¿La silueta del circuito se dibuja bien, o sale deformada?</li>
-</ul>
-<p><strong>Si no tenés el 2026 Season Pack, saltá esta validación</strong> y avisá que quedó
-pendiente. No hace falta comprarlo para esto.</p>
-<hr />
 <h2>Cómo reportar</h2>
 <p>No hace falta nada formal. Con esto alcanza:</p>
 <pre><code>VALIDACIÓN 1 — Setup
@@ -476,12 +417,6 @@ Nombre y equipo que muestra:
 Dificultad IA: juego ___ / dashboard ___
 Clima y temperaturas: ¿coinciden?
 
-VALIDACIÓN 7 — Formato 2026   (solo con el 2026 Season Pack)
-¿Tengo el pack?  sí / no
-¿Se ve velocidad en vivo?  sí / no
-Si no, mensaje exacto que muestra la app:
-¿Nombre de piloto y equipo correctos en el dashboard?
-¿La silueta del circuito se ve bien?
 </code></pre>
 <p><strong>Las fotos valen más que la descripción.</strong> Una foto del menú del juego al lado
 de una del dashboard resuelve en dos segundos lo que por escrito lleva media
