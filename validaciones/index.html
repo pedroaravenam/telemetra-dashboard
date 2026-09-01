@@ -105,8 +105,81 @@
 <div class="wrap">
 <p class="brand">Telemetra Racing</p>
 <h1>Validaciones pendientes contra el juego</h1>
-<p>Última revisión: 2026-08-30
+<p>Última revisión: 2026-08-31
 Para: <strong>Felipe</strong> (PS5) — o quien tenga el juego a mano</p>
+<h2>Resultado de la primera tanda (Felipe, 2026-08-31, Monza)</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Validación</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Setup del auto</td>
+<td>✅ <strong>Validada.</strong> Los 23 valores del panel coinciden exactos contra las 7 fotos del menú del juego.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Combustible y ERS (Car Status)</td>
+<td>❌ <strong>Sin registro en el dashboard.</strong> Ver hipótesis abajo.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Desgaste de neumáticos (Car Damage)</td>
+<td>❌ <strong>Sin registro en el dashboard.</strong> Misma causa probable que la 2.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Sesión larga</td>
+<td>⏳ <strong>Parcial</strong>, no cuenta como prueba completa (ver nota).</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Primera vuelta limpia</td>
+<td>✅ <strong>Validada.</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Piloto, equipo y condiciones</td>
+<td>❌ <strong>Bug encontrado.</strong> El dashboard mostró "Equipo #221" corriendo con Ferrari.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Validaciones 2 y 3 — hipótesis:</strong> ambos paquetes (<code>CarStatusPacket</code>,
+<code>CarDamagePacket</code>) descartan el datagrama entero si su tamaño no coincide
+exacto con el que predice la spec transcrita de EA (<code>parser.dart</code>, guard de
+<code>minSizeInBytesFor</code>) — es la misma protección de "fallar callado antes que
+mostrar un dato inventado" que ya atrapó el bug de <code>engineTemperature</code> en Car
+Telemetry (ver <code>docs/decisions/011-soporte-f1-26.md</code>). La lectura más probable
+es que F1 26 haya cambiado algo del tamaño de Car Status y/o Car Damage
+también, igual que hizo con Car Telemetry, y el guard esté descartando el
+paquete entero en silencio. <strong>No se puede confirmar ni arreglar sin una
+captura cruda</strong> de esos dos <code>packetId</code> (7 y 10) en formato 2026 — el paso que
+falta es justamente eso, no repetir la validación tal cual.</p>
+<p><strong>Validación 4 — nota:</strong> la tanda de 20 vueltas fue en un Entrenamiento de 30
+minutos (19 vueltas guardadas, se acabó el tiempo), no la carrera de 25%+ de
+distancia que pide esta validación — sigue pendiente en su forma completa.
+Dato que sí queda: 6% de batería consumido en ~30 minutos de captura.</p>
+<p><strong>Validación 6 — confirmado bug real, no falso positivo:</strong> Felipe corrió con
+Ferrari; en el roster de 2026, Hamilton es piloto de Ferrari — así que
+"Equipo #221" está mal, no es un equipo fuera de la grilla moderna. El
+<code>teamId</code> de F1 26 pasó a 2 bytes (antes 1) y su lectura no estaba confirmada
+contra tráfico real (<code>packages/telemetry-parser/lib/src/f1_25/team_names.dart</code>);
+esto confirma que está corrida. Mismo bloqueo que 2 y 3: hace falta una
+captura cruda del paquete Participants en 2026 para encontrar el offset
+correcto.</p>
+<p>Aparte, se encontró (no reportado por Felipe, visible en su propia captura
+del dashboard) que <strong>el detalle de vuelta del dashboard web no podía cargar
+la telemetría</strong> ("Unsupported operation: <code>_newZlibInflateFilter</code>") — el
+codec de <code>lap_telemetry</code>/<code>lap_position</code> usaba el <code>gzip</code> de <code>dart:io</code>, que no
+existe en Flutter Web. Ya corregido: ambos codecs pasaron a <code>package:archive</code>
+(gzip puro Dart, mismo formato estándar, compatible con los datos ya
+guardados) — ver <code>packages/lap_recorder/lib/src/lap_telemetry_codec.dart</code> y
+<code>lap_position_codec.dart</code>.</p>
 <p>Hay partes de Telemetra Racing que funcionan "en teoría": el código las lee, la
 app las muestra y los tests pasan, pero <strong>nadie comparó nunca esos números
 contra lo que dice el juego</strong>. Este documento lista todas, con los pasos para
@@ -222,7 +295,7 @@ formato y terminás en otro, un resultado raro no se sabría a cuál atribuirlo.
 <p>Si el contador sube pero no aparece velocidad, no es problema de red: es de
 formato, y la app te dice cuál llegó.</p>
 <hr />
-<h2>Validación 1 — Setup del auto ⭐ la más importante</h2>
+<h2>Validación 1 — Setup del auto ⭐ la más importante ✅ VALIDADA (2026-08-31)</h2>
 <p><strong>Qué comprueba:</strong> que los 23 valores del setup se estén leyendo de los bytes
 correctos.</p>
 <p><strong>Por qué es la primera:</strong> es la que bloquea todo lo demás. Los otros dos
@@ -277,7 +350,7 @@ menú del juego</strong> justamente para que se puedan poner lado a lado.</p>
 de la completa: <strong>alerón delantero</strong>, <strong>alerón trasero</strong>, <strong>reparto de frenada</strong>
 y <strong>combustible</strong>.</p>
 <hr />
-<h2>Validación 2 — Combustible y ERS</h2>
+<h2>Validación 2 — Combustible y ERS ❌ SIN REGISTRO (2026-08-31, ver hipótesis arriba)</h2>
 <p><strong>Qué comprueba:</strong> el paquete Car Status (combustible, batería, compuesto de
 neumático).</p>
 <h3>Pasos</h3>
@@ -304,7 +377,7 @@ el guardado es del final— pero tienen que ser <strong>del mismo orden</strong>
 clara de un layout corrido.</strong> Si ves algo así, avisá enseguida y no sigas con la
 validación 3: ya sabemos que hay que revisar.</p>
 <hr />
-<h2>Validación 3 — Desgaste de neumáticos</h2>
+<h2>Validación 3 — Desgaste de neumáticos ❌ SIN REGISTRO (2026-08-31, ver hipótesis arriba)</h2>
 <p><strong>Qué comprueba:</strong> el paquete Car Damage.</p>
 <h3>Pasos</h3>
 <ol>
@@ -320,7 +393,7 @@ decía 11/8/11/10, el panel tiene que decir <strong>11%</strong>.</p>
 <p>También aparece <strong>«VUELTAS DEL NEUMÁTICO»</strong>: tiene que coincidir con cuántas
 vueltas llevabas con ese juego puesto.</p>
 <hr />
-<h2>Validación 4 — Sesión larga 🕐</h2>
+<h2>Validación 4 — Sesión larga 🕐 ⏳ PARCIAL (2026-08-31, falta la carrera completa)</h2>
 <p><strong>Qué comprueba:</strong> que la captura aguante una carrera completa sin cortarse, y
 cuánta batería se come.</p>
 <p><strong>Esta es la única que no se puede hacer junto con las demás</strong>, porque necesita
@@ -366,7 +439,7 @@ tiempo real de manejo.</p>
 20 vueltas tienen que aparecer 20 (menos las inválidas, que igual aparecen pero
 marcadas).</p>
 <hr />
-<h2>Validación 5 — Que la primera vuelta salga limpia</h2>
+<h2>Validación 5 — Que la primera vuelta salga limpia ✅ VALIDADA (2026-08-31)</h2>
 <p><strong>Qué comprueba:</strong> un arreglo reciente. Antes, la primera vuelta de cada sesión
 guardaba también el tiempo en el garage y la vuelta de salida —en una sesión
 real llegó a tener <strong>el triple de datos de los que le correspondían</strong>, con el
@@ -383,7 +456,7 @@ el gráfico de velocidad.</p>
   un número negativo.</li>
 </ul>
 <hr />
-<h2>Validación 6 — Piloto, equipo y condiciones ⭐ importa más de lo que parece</h2>
+<h2>Validación 6 — Piloto, equipo y condiciones ⭐ importa más de lo que parece ❌ BUG ENCONTRADO (2026-08-31, ver arriba)</h2>
 <p>Es rápida —sale gratis con cualquier sesión— pero <strong>no es menor</strong>: es lo último
 que queda sin confirmar del formato 2026.</p>
 <p>En 2026 los identificadores de piloto y de equipo pasaron de ocupar 1 byte a
